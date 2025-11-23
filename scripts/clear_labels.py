@@ -2,14 +2,14 @@ import numpy as np
 import pandas as pd
 
 
-df = pd.read_csv('../data/gz2_hart16.csv')
+df = pd.read_csv('data/gz2_hart16.csv')
 
 # drop cols
 keep = ['dr7objid', 'gz2_class', 'total_classifications']
 df.drop(columns=filter(lambda c: c not in keep, list(df.columns)), inplace=True)
 
 # adding asset_id
-mapping = pd.read_csv('../data/gz2_filename_mapping.csv')
+mapping = pd.read_csv('data/gz2_filename_mapping.csv')
 mapping.drop(columns=['sample'], inplace=True)
 mapping.rename(columns={'objid': 'dr7objid'}, inplace=True)
 df = df.merge(mapping, on='dr7objid', how='left')
