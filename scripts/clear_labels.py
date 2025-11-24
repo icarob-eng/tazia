@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 
+import os
+
 
 df = pd.read_csv('../data/gz2_hart16.csv')
 
@@ -35,3 +37,14 @@ df.drop(df[df.gz2_class.str.contains('Se')].index, inplace=True)       # Spirals
 df.drop(df[df.gz2_class.str.contains('S.?a')].index, inplace=True)     # Spirals edge-on
 
 df.to_csv('gz2_hart16_classes_simple.csv', index=False)
+
+# test access
+misses = 0
+hits = 0
+for asset_id in df['asset_id']:
+    if os.path.exists(f'../data/images_gz2/images/{asset_id}.jpg'):
+        hits += 1
+    else:
+        misses += 1
+
+print(f'{misses=}; {hits=}.')
