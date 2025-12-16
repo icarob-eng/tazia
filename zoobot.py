@@ -2,6 +2,9 @@ import timm
 import torch
 import torchvision as tv
 from PIL import Image
+import numpy as np
+import pandas as pd
+import tqdm
 
 encoder = timm.create_model('hf_hub:mwalmsley/zoobot-encoder-convnext_nano', pretrained=True, num_classes=0)
 encoder.eval()
@@ -14,21 +17,36 @@ preprocess = tv.transforms.Compose([
     )
 ])
 
+print('Encoder input:', encoder.default_cfg['input_size'])  # [3, 224, 224]
+print('Encoder output:', encoder.num_features)              # 640
+print('Classifier:', encoder.get_classifier())              # Identity()
 
-print('Encoder input:', encoder.default_cfg['input_size'])
-print('Encoder output:', encoder.num_features)
-print('Classifier:', encoder.get_classifier())
 
+def get_features(path):
+    input_image = Image.open(path).convert('RGB')
+    input_image = preprocess(input_image).unsqueeze(0)
 
-input_image = Image.open('data/images_gz2/images/11.jpg').convert('RGB')
+    # print('Image shape:', input_image.shape)
+    # print('Image type:', input_image.type())
 
-input_image = preprocess(input_image).unsqueeze(0)
+    with torch.no_grad():
+        return encoder(input_image)
 
-print('Image shape:', input_image.shape)
-print('Image type:', input_image.type())
+    # print(f'Feature vector shape:', features.shape)
 
-with torch.no_grad():
-    features = encoder(input_image)
+assets = pd.array(pd.read_csv('data/gz2_hart16_classes_simple.csv').asset_id)
+max_n = assets.shape[0]
 
-print(f'Feature vector shape:', features.shape)
+if __name__ == '__main__':
+    head = 5000  # max_n  # select first `head` elements
+    feature_vector = np.empty([head, 1 + encoder.num_features])
+    feature_vector[:, 0] = assets[:head]
 
+    del assets
+    for i in tqdm.tqdm(range(head)):
+        try:
+            feature_vector[i, 1:] = get_features(f'data/images_gz2/images/{int(feature_vector[i,0])}.jpg')
+        except FileNotFoundError:
+            feature_vector[i, 1:] = np.nan
+
+    np.savetxt('data/zoobot-encoder-convnext_nano.feature_vector.csv', feature_vector, fmt='%.4f')
