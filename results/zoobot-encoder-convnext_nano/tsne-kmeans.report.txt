@@ -1,0 +1,16 @@
+# Result report
+
+Methodology: k-means grouping with t-SNE reduction for zoobot-encoder-convnext_nano.
+Number of samples: 4999.
+
+Confusion matrix:
+cluster     0     1
+classe             
+1         332  1977
+0        2674    16
+
+Normalized:
+cluster         0         1
+classe                     
+1        0.143785  0.856215
+0        0.994052  0.005948

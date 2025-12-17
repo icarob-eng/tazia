@@ -6,6 +6,8 @@ import numpy as np
 import pandas as pd
 import tqdm
 
+import os
+
 encoder = timm.create_model('hf_hub:mwalmsley/zoobot-encoder-convnext_nano', pretrained=True, num_classes=0)
 encoder.eval()
 
@@ -38,15 +40,38 @@ assets = pd.array(pd.read_csv('data/gz2_hart16_classes_simple.csv').asset_id)
 max_n = assets.shape[0]
 
 if __name__ == '__main__':
-    head = 5000  # max_n  # select first `head` elements
-    feature_vector = np.empty([head, 1 + encoder.num_features])
-    feature_vector[:, 0] = assets[:head]
+    # ------ configs ------
+    src_root = 'data/images_gz2/images'
+    outfile = 'data/zoobot-encoder-convnext_nano.feature_vector.csv'
+    n = 5000  # max_n  # select first n elements
+    batch_size = 1000  # partial saving batches
+
+
+    try:
+        os.remove(outfile)
+    except FileNotFoundError:
+        pass
+    feature_matrix = np.empty([n, 1 + encoder.num_features])
+    feature_matrix[:, 0] = assets[:n]
+
+    current_batch = 0
 
     del assets
-    for i in tqdm.tqdm(range(head)):
+    for i in tqdm.tqdm(range(n)):
         try:
-            feature_vector[i, 1:] = get_features(f'data/images_gz2/images/{int(feature_vector[i,0])}.jpg')
+            feature_matrix[i, 1:] = get_features(f'{src_root}/{int(feature_matrix[i,0])}.jpg')
         except FileNotFoundError:
-            feature_vector[i, 1:] = np.nan
+            feature_matrix[i, 1:] = np.nan
 
-    np.savetxt('data/zoobot-encoder-convnext_nano.feature_vector.csv', feature_vector, fmt='%.4f')
+        if i == 0: continue
+        if i % batch_size == 0:
+            print('\nSaving batch:', current_batch)
+            with open(outfile, 'a+') as f:
+                np.savetxt(f, feature_matrix[batch_size * current_batch:batch_size * (current_batch + 1)], fmt='%.4f')
+                current_batch+=1
+
+    print('\nSaving last batch:', current_batch)
+    with open(outfile, 'a+') as f:
+        np.savetxt(f, feature_matrix[batch_size * current_batch:batch_size * (current_batch + 1)], fmt='%.4f')
+
+

@@ -4,8 +4,14 @@ from sklearn.manifold import TSNE
 from sklearn.cluster import KMeans
 from sklearn.metrics import confusion_matrix
 
-enconder = 'zoobot-encoder-convnext_nano'
-features = pd.read_csv(f'data/{enconder}.feature_vector.csv', sep=' ',
+import os
+
+encoder = 'zoobot-encoder-convnext_nano'
+try:
+    os.makedirs(f'results/{encoder}')
+except FileExistsError:
+    pass
+features = pd.read_csv(f'data/{encoder}.feature_vector.csv', sep=' ',
                        header=None, names=['asset_id', *range(640)])
 features.dropna(axis=0, how='any', inplace=True)
 df = pd.read_csv('data/gz2_hart16_classes_simple.csv')
@@ -38,23 +44,23 @@ group_clusters = df_features.groupby('cluster')
 
 fig, (ax0, ax1) = plt.subplots(1, 2, figsize=(20, 10), sharey=True)
 
-fig.suptitle(f'k-means with t-SNE\n{enconder}')
+fig.suptitle(f'k-means with t-SNE\n{encoder}')
 
 ax0.set_xlabel('t-SNE x')
 ax0.set_ylabel('t-SNE y')
 ax1.set_xlabel('t-SNE x')
 
-ax0.set_title('Legendas GZ')
+ax0.set_title('Labels from GalaxyZoo')
 for name, group in group_labels:
     ax0.scatter(group.tsne_x, group.tsne_y, label=name)
 ax0.legend()
 
-ax1.set_title('Clusters k-means')
+ax1.set_title('Clusters from k-means')
 for name, group in group_clusters:
     ax1.scatter(group.tsne_x, group.tsne_y, label=name)
 ax1.legend()
 
-fig.savefig(f'results/{enconder}.tsne-kmeans.png')
+fig.savefig(f'results/{encoder}/tsne-kmeans.png')
 
 
 # ------ result report ------
@@ -76,7 +82,7 @@ cm_df = pd.DataFrame(
 
 result = f'''# Result report
 
-Methodology: k-means grouping with t-SNE reduction for {enconder}.
+Methodology: k-means grouping with t-SNE reduction for {encoder}.
 Number of samples: {len(df_features)}.
 
 Confusion matrix:
@@ -87,5 +93,5 @@ Normalized:
 '''
 
 print(result)
-with open(f'results/{enconder}.tsne-kmeans.report.txt', 'w+') as f:
+with open(f'results/{encoder}/tsne-kmeans.report.txt', 'w+') as f:
     f.write(result)

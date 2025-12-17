@@ -1,0 +1,17 @@
+# Result report
+
+Methodology: 2 perceptrons with 640 features from zoobot-encoder-convnext_nano.
+Training dataset size: 3999
+Test dataset size:     1000
+
+Confusion matrix:
+pred     class_0  class_1
+true                     
+class_0       55      466
+class_1      472        7
+
+Normalized:
+pred      class_0   class_1
+true                       
+class_0  0.105566  0.894434
+class_1  0.985386  0.014614
