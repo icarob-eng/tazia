@@ -46,6 +46,8 @@ if __name__ == '__main__':
     n = 5000  # max_n  # select first n elements
     batch_size = 1000  # partial saving batches
 
+    # todo: balanced sampling
+
 
     try:
         os.remove(outfile)
